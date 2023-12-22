@@ -1,0 +1,21 @@
+Package: CSNet
+Title: Statistical method CSNet for estimating cell-type-specific gene co-expression networks from bulk gene expression data
+Version: 1.0.0
+Authors@R: 
+    person("Chang", "Su", , "chang.su@emory.edu", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-8704-1512"))
+Description: This package implements the statistical methods proposed in DOI:10.1080/01621459.2023.2297467.
+License: use_mit_license()
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Suggests: 
+    knitr,
+    rmarkdown,
+    ggplot2
+Imports:
+    nnls
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
+LazyData: true

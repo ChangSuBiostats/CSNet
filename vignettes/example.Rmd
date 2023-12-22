@@ -1,0 +1,84 @@
+---
+title: "Example"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Example dataset
+
+We demonstrate the use of CSNet with a simulated dataset. The data was simulated based on model (1) with cell-type-specific co-expression networks as in Table 1 & Figure 1 of our paper (https://www.tandfonline.com/doi/full/10.1080/01621459.2023.2297467). In specific, n=600, p=100, cell type 1 is twice as abundant as cell type 2.
+
+```{r setup}
+library(CSNet)
+```
+
+```{r}
+# simulated cell type proportions
+dim(sim_data_list$P) # 2 cell types
+
+# simulated cell-type-specific expression
+dim(sim_data_list$ct_X[[1]]) # 600 samples, 100 genes
+dim(sim_data_list$ct_X[[2]])
+```
+
+## Cell-type-specific co-expression networks
+```{r}
+# truncated AR(1) in the first cluster (as in Figure 1 of the paper)
+heatmap(cor(sim_data_list$ct_X[[1]]), Rowv = NA, Colv = NA, 
+        symm = T, scale = 'none', labRow = FALSE, labCol = FALSE,
+        main =  'oracle, cell type 1')
+# truncated AR(1) in the second cluster (as in Figure 1 of the paper)
+heatmap(cor(sim_data_list$ct_X[[2]]), Rowv = NA, Colv = NA, 
+        symm = T, scale = 'none',  labRow = FALSE, labCol = FALSE,
+        main = 'oracle, cell type 2')
+```
+
+These are the 'oracle' estimates based on true cell-type-specific expression data. Next, we construct the observed bulk gene expression data and our goal is to use bulk gene expression data to estimate these cell-type-specific networks.
+
+
+## Bulk co-expression networks
+```{r}
+# generate bulk data based on model (1)
+bulk_X <- sim_data_list$P[,1] * sim_data_list$ct_X[[1]] +
+  sim_data_list$P[,2] * sim_data_list$ct_X[[2]]
+```
+
+```{r}
+# naive estimates based on bulk gene expression: sample correlations
+bulk_cor <- cor(bulk_X)
+heatmap(bulk_cor, Rowv = NA, Colv = NA, 
+        symm = T, scale = 'none',
+        labRow = FALSE, labCol = FALSE,
+        main = 'Bulk co-expression')
+```
+
+The correlation matrix based on bulk sample performs unsatisfactory in estimating cell-type-specific co-expressions. It can be seen that the co-expressions in cell type 2 are much attenuated in the bulk estimate due to its low cell type proportion. Moreover, genes in cluster 3 appear correlated due to the confounding effect of varying cell type proportions.
+
+
+# Run CSNet
+```{r}
+# CSNet takes observed bulk gene expression data and cell type proportions as input
+res <- CSNet(X = bulk_X, P = sim_data_list$P)
+# res is a list of cell-type-specific co-expression network estimates
+```
+
+```{r}
+heatmap(res[[1]], Rowv = NA, Colv = NA, symm = T,
+        labRow = FALSE, labCol = FALSE, scale = 'none',
+        main = 'CSNet, cell type 1')
+heatmap(res[[2]], Rowv = NA, Colv = NA, symm = T, 
+        labRow = FALSE, labCol = FALSE, scale = 'none',
+         main = 'CSNet, cell type 2')
+```
+
+We can see that CSNet estimated the true cell-type-specific co-expression networks well and effectively addressed the confounding effect of cell type proportions.
